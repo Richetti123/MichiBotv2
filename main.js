@@ -1,4 +1,3 @@
-
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 import './config.js';
 import './api.js';
@@ -589,10 +588,8 @@ if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
       let numeroTelefono;
       if (!!phoneNumber) {
         numeroTelefono = phoneNumber.replace(/[^0-9]/g, '');
-        if (PHONENUMBER_MCC && !Object.keys(PHONENUMBER_MCC).some(v => numeroTelefono.startsWith(v))) {
-          console.log(chalk.bgBlack(chalk.bold.redBright(
-            "Comience con el código de país de su número de WhatsApp.\nEjemplo: +5219992095479\n"
-          )));
+        if (!Object.keys(PHONENUMBER_MCC).some(v => numeroTelefono.startsWith(v))) {
+          console.log(chalk.bgBlack(chalk.bold.redBright("Comience con el código de país de su número de WhatsApp.\nEjemplo: +5219992095479\n")));
           process.exit(0);
         }
       } else {
