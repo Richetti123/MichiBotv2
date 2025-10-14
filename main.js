@@ -588,10 +588,18 @@ if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
       let numeroTelefono;
       if (!!phoneNumber) {
         numeroTelefono = phoneNumber.replace(/[^0-9]/g, '');
-        if (!Object.keys(PHONENUMBER_MCC).some(v => numeroTelefono.startsWith(v))) {
-          console.log(chalk.bgBlack(chalk.bold.redBright("Comience con el código de país de su número de WhatsApp.\nEjemplo: +5219992095479\n")));
-          process.exit(0);
+        if (
+          !PHONENUMBER_MCC ||
+          !Object.keys(PHONENUMBER_MCC).some(v => numeroTelefono.startsWith(v))
+        ) {
+        console.log(
+          chalk.bgBlack(
+            chalk.bold.redBright("Comience con el código de país de su número de WhatsApp.\nEjemplo: +5219992095479\n")
+          )
+        );
+        process.exit(0);
         }
+      }
       } else {
         while (true) {
           numeroTelefono = await question(chalk.bgBlack(chalk.bold.yellowBright('Por favor, escriba su número de WhatsApp.\nEjemplo: +5219992095479\n')));
