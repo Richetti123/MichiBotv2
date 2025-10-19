@@ -46,7 +46,7 @@ global.videoList = [];
 global.videoListXXX = [];
 const __dirname = global.__dirname(import.meta.url);
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
-global.prefix = new RegExp('^[#!/.]Aa')
+global.prefix = new RegExp('^[#!/.]')
 global.db = new Low(/https?:\/\//.test(opts['db'] || '') ? new cloudDBAdapter(opts['db']) : new JSONFile(`${opts._[0] ? opts._[0] + '_' : ''}database.json`));
 
 global.loadDatabase = async function loadDatabase() {
@@ -488,7 +488,9 @@ async function interceptMessages(messages, lidResolver) {
 }
 
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
-const version = await fetchLatestBaileysVersion();
+const version22 = await fetchLatestBaileysVersion();
+console.log(version22)
+const version = [2, 3000, 1025190524]; 
 let phoneNumber = global.botnumber || process.argv.find(arg => arg.startsWith('--phone='))?.split('=')[1];
 const methodCodeQR = process.argv.includes('--method=qr');
 const methodCode = !!phoneNumber || process.argv.includes('--method=code');
