@@ -85,5 +85,5 @@ handler.help = ['hidetag'];
 handler.tags = ['group'];
 handler.command = /^(hidetag|notificar|notify|tag|viso|aviso)$/i;
 handler.group = true;
-handler.admin = true;
+handler.admin = false;
 export default handler;
