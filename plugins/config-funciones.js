@@ -1,3 +1,4 @@
+const user = (jid) => '@' + jid.split('@')[0];
 const handler = async (m, {conn, usedPrefix, command, args, isOwner, isAdmin, isROwner}) => {
 const datas = global
 const idioma = datas.db.data.users[m.sender].language || global.defaultLenguaje
