@@ -6,10 +6,6 @@ const handler = async (m, {isOwner, isAdmin, conn, text, participants, args, com
 
   console.log(participants)
   if (usedPrefix == 'a' || usedPrefix == 'A') return;
-  if (!(isAdmin || isOwner)) {
-    global.dfail('admin', m, conn);
-    throw false;
-  }
   const pesan = args.join` `;
   const oi = `@richetti_123 ${pesan}`;
   let teks = `${global.packname} te invoca despiértate 😡!!\n\nETIQUETAS:\n`;
