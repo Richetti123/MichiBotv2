@@ -707,7 +707,8 @@ export async function handler(chatUpdate) {
     //const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch((_) => null)) : {}) || {};
     const participants = ((m.isGroup ? groupMetadata.participants : []) || []).map(participant => ({ id: participant.jid, jid: participant.jid, lid: participant.lid, admin: participant.admin }));
     //const participants = (m.isGroup ? groupMetadata.participants : []) || [];
-    const user = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) === m.sender) : {}) || {}; // User Data
+    const senderID = m.key.participant || m.sender; 
+    const user = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) === conn.decodeJid(senderID)) : {}) || {};
     const bot = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) == this.user.jid) : {}) || {}; // Your Data
     const isRAdmin = user?.admin == 'superadmin' || false;
     const isAdmin = isRAdmin || user?.admin == 'admin' || false; // Is User Admin?
