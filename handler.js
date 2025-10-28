@@ -702,17 +702,56 @@ export async function handler(chatUpdate) {
     m.exp += Math.ceil(Math.random() * 10);
 
     let usedPrefix;
-    const _user = global.db.data && global.db.data.users && global.db.data.users[m.sender];
-    const groupMetadata = m.isGroup ? { ...(conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}), ...(((conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants) && { participants: ((conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants || []).map(p => ({ ...p, id: p.jid, jid: p.jid, lid: p.lid })) }) } : {};
-    //const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch((_) => null)) : {}) || {};
-    const participants = ((m.isGroup ? groupMetadata.participants : []) || []).map(participant => ({ id: participant.jid, jid: participant.jid, lid: participant.lid, admin: participant.admin }));
-    //const participants = (m.isGroup ? groupMetadata.participants : []) || [];
-    const senderID = m.key.participant || m.sender; 
-    const user = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) === conn.decodeJid(senderID)) : {}) || {};
-    const bot = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) == this.user.jid) : {}) || {}; // Your Data
-    const isRAdmin = user?.admin == 'superadmin' || false;
-    const isAdmin = isRAdmin || user?.admin == 'admin' || false; // Is User Admin?
-    const isBotAdmin = bot?.admin || false; // Are you Admin?
+    let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
+
+    const groupMetadata = m.isGroup
+    ? (global.cachedGroupMetadata
+    ? await global.cachedGroupMetadata(m.chat).catch((_) => null)
+    : await this.groupMetadata(m.chat).catch((_) => null)) || {}
+    : {}
+    const participants = Array.isArray(groupMetadata?.participants) ? groupMetadata.participants : []
+
+    const decode = (j) => this.decodeJid(j)
+    const norm = (j) => jidNormalizedUser(decode(j))
+    const numOnly = (j) =>
+    String(decode(j))
+    .split('@')[0]
+    .replace(/[^0-9]/g, '')
+
+    const meIdRaw = this.user?.id || this.user?.jid // ej: 5215...:26@s.whatsapp.net
+    const meLidRaw = (this.user?.lid || conn?.user?.lid || '').toString().replace(/:.*/, '') || null // ej: 2064... (solo números)
+    const botNum = numOnly(meIdRaw)
+
+    const botCandidates = [
+    decode(meIdRaw),
+    jidNormalizedUser(decode(meIdRaw)),
+    botNum,
+    meLidRaw && `${meLidRaw}@lid`,
+    meLidRaw && jidNormalizedUser(`${meLidRaw}@lid`),
+    meLidRaw && `${meLidRaw}@s.whatsapp.net`
+    ].filter(Boolean)
+
+    const senderCandidates = [decode(m.sender), jidNormalizedUser(decode(m.sender)), numOnly(m.sender)]
+
+    const participantsMap = {}
+    for (const p of participants) {
+    const raw = p.jid || p.id
+    const dj = decode(raw)
+    const nj = jidNormalizedUser(dj)
+    const no = numOnly(dj)
+    participantsMap[dj] = p
+    participantsMap[nj] = p
+    participantsMap[no] = p
+    }
+
+    const pick = (cands) => {
+    for (const k of cands) if (participantsMap[k]) return participantsMap[k]
+    // Fallback: comparación semántica por JID
+    return participants.find((p) => cands.some((c) => areJidsSameUser(norm(p.jid || p.id), jidNormalizedUser(decode(c))))) || null
+    }
+
+    const user = m.isGroup ? pick(senderCandidates) || {} : {}
+    const bot = m.isGroup ? pick(botCandidates) || {} : {}
 
     const ___dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), './plugins');
     for (const name in global.plugins) {
