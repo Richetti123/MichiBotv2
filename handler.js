@@ -704,15 +704,27 @@ export async function handler(chatUpdate) {
 
     let usedPrefix;
     const _user = global.db.data && global.db.data.users && global.db.data.users[m.sender];
-    const groupMetadata = m.isGroup ? { ...(conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}), ...(((conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants) && { participants: ((conn.chats[m.chat]?.metadata || await this.groupMetadata(m.chat).catch(_ => null) || {}).participants || []).map(p => ({ ...p, id: p.jid, jid: p.jid, lid: p.lid })) }) } : {};
-    //const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch((_) => null)) : {}) || {};
-    const participants = ((m.isGroup ? groupMetadata.participants : []) || []).map(participant => ({ id: participant.jid, jid: participant.jid, lid: participant.lid, admin: participant.admin }));
-    //const participants = (m.isGroup ? groupMetadata.participants : []) || [];
-    const user = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) === m.sender) : {}) || {}; // User Data
-    const bot = (m.isGroup ? participants.find((u) => conn.decodeJid(u.jid) == this.user.jid) : {}) || {}; // Your Data
-    const isRAdmin = user?.admin == 'superadmin' || false;
-    const isAdmin = isRAdmin || user?.admin == 'admin' || false; // Is User Admin?
-    const isBotAdmin = bot?.admin || false; // Are you Admin?
+
+    const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch(_ => null)) : {}) || {}
+    const participants = (m.isGroup ? groupMetadata.participants.map(v => ({ ...v, id: v.jid })) : []) || []
+    let numBot = (conn.user.lid || '').replace(/:.*/, '') || false
+    const detectwhat2 = m.sender.includes('@lid') ? `${numBot}@lid` : conn.user.jid
+
+    // Normaliza el JID del remitente para una búsqueda precisa
+    const senderNormalized = conn.decodeJid(m.sender);
+
+    // Normaliza el JID del bot para la comparación
+    const botJidNormalized = conn.decodeJid(conn.user.jid);
+
+    // Encuentra el objeto del usuario comparando el JID normalizado con el campo 'jid' del participante
+    const user = (m.isGroup ? participants.find(u => u.jid === senderNormalized) : {}) || {}
+
+    // Encuentra el objeto del bot comparando el JID normalizado con el campo 'jid' del participante
+    const bot = (m.isGroup ? participants.find(u => u.jid === botJidNormalized) : {}) || {}
+
+    const isRAdmin = user?.admin === 'superadmin' || false
+    const isAdmin = isRAdmin || user?.admin === 'admin' || false
+    const isBotAdmin = bot?.admin === 'superadmin' || bot?.admin === 'admin' || false
     
     const ___dirname = path.join(path.dirname(fileURLToPath(import.meta.url)), './plugins');
     for (const name in global.plugins) {
