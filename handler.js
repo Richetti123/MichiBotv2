@@ -703,7 +703,7 @@ export async function handler(chatUpdate) {
 
     let usedPrefix;
     let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
-
+    let jid = jidNormalizedUser(key.remoteJid)
     const groupMetadata = m.isGroup
     ? (global.cachedGroupMetadata
     ? await global.cachedGroupMetadata(m.chat).catch((_) => null)
